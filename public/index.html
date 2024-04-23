@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="module">
+    navigator.serviceWorker.register('./sw.js')
+      .then(registration => {
+        const serviceWorker = registration.installing ?? registration.waiting ?? registration.active
+        if (serviceWorker.state === 'activated') {
+          window.location.replace('./graphql')
+        } else {
+          serviceWorker.addEventListener('statechange', e => {
+            if (e.target.state !== 'activated') return
+            window.location.replace('./graphql')
+          })
+        }
+      })
+  </script>
+</head>
+<body>
+  Loading...
+</body>
+</html>

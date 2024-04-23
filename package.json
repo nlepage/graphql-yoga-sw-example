@@ -1,0 +1,22 @@
+{
+  "name": "graphql-yoga-sw-example",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/sw.js --bundle --format=esm --minify --outfile=dist/sw.js && cp -r public/* dist/",
+    "serve": "serve dist"
+  },
+  "author": {
+    "name": "Nicolas Lepage",
+    "url": "https://github.com/nlepage"
+  },
+  "repository": "https://github.com/nlepage/graphql-yoga-sw-example",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.20.2",
+    "graphql": "^16.8.1",
+    "graphql-yoga": "^5.3.0",
+    "serve": "^14.2.2",
+    "urlpattern-polyfill": "^10.0.0"
+  }
+}

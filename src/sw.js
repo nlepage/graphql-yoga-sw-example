@@ -1,6 +1,6 @@
 import 'urlpattern-polyfill';
 import { createYoga } from 'graphql-yoga'
-import { schema } from './schema.js'
+import { getSchema } from './schema.js'
 
 // Skip installed stage and jump to activating stage
 addEventListener('install', (event) => {
@@ -16,7 +16,7 @@ const graphqlPath = new URL('./graphql', location).pathname
 
 const yoga = createYoga({
   fetchAPI: fetch,
-  schema,
+  schema: getSchema(),
   graphiql: graphqlPath,
   graphqlEndpoint: graphqlPath,
 })

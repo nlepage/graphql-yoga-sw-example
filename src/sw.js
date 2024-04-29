@@ -1,6 +1,7 @@
 import 'urlpattern-polyfill';
 import { createYoga } from 'graphql-yoga'
 import { getSchema } from './schema.js'
+import { getIdbUserStore } from './user-store.js';
 
 // Skip installed stage and jump to activating stage
 addEventListener('install', (event) => {
@@ -12,13 +13,18 @@ addEventListener('activate', event => {
   event.waitUntil(clients.claim())
 })
 
-const graphqlPath = new URL('./graphql', location).pathname
+const graphqlPath = new URL('./graphql', location).pathname;
+
+const userStorePromise = getIdbUserStore();
 
 const yoga = createYoga({
   fetchAPI: fetch,
   schema: getSchema(),
   graphiql: graphqlPath,
   graphqlEndpoint: graphqlPath,
+  context: async () => ({
+    userStore: await userStorePromise,
+  }),
 })
 
 addEventListener('fetch', e => {

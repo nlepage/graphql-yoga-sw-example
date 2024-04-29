@@ -15,11 +15,6 @@ export async function getSchema() {
     executor: rickAndMortyExecutor,
   }
 
-  const me = {
-    id: 'me',
-    favoriteCharactersIds: [],
-  }
-
   const userSubschema = createSchema({
     typeDefs: /* GraphQL */ `
       type Query {
@@ -37,14 +32,16 @@ export async function getSchema() {
     `,
     resolvers: {
       Query: {
-        me() {
-          return me
+        me(_, __, { userStore }) {
+          return userStore.get('me');
         },
       },
 
       Mutation: {
-        toggleFavoriteCharacter(_, { userId, characterId }) {
-          if (userId !== 'me') throw new GraphQLError(`unknown userId ${userId}`)
+        async toggleFavoriteCharacter(_, { userId, characterId }, { userStore }) {
+          if (userId !== 'me') throw new GraphQLError(`unknown userId ${userId}`);
+
+          const me = await userStore.get('me');
 
           const index = me.favoriteCharactersIds.indexOf(characterId)
           if (index === -1) {
@@ -52,6 +49,8 @@ export async function getSchema() {
           } else {
             me.favoriteCharactersIds.splice(index, 1)
           }
+
+          await userStore.set('me', me);
 
           return me
         }

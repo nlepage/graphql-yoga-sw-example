@@ -1,9 +1,8 @@
 import { delegateToSchema } from '@graphql-tools/delegate'
 import { buildHTTPExecutor } from '@graphql-tools/executor-http'
 import { stitchSchemas } from '@graphql-tools/stitch'
-import { schemaFromExecutor } from '@graphql-tools/wrap'
-import { GraphQLError } from 'graphql'
-import { createSchema } from 'graphql-yoga'
+import { schemaFromExecutor, FilterObjectFields } from '@graphql-tools/wrap'
+import { userSchema } from './user-schema.js'
 
 export async function getSchema() {
   const rickAndMortyExecutor = buildHTTPExecutor({
@@ -15,48 +14,12 @@ export async function getSchema() {
     executor: rickAndMortyExecutor,
   }
 
-  const userSubschema = createSchema({
-    typeDefs: /* GraphQL */ `
-      type Query {
-        me: User!
-      }
-
-      type Mutation {
-        toggleFavoriteCharacter(userId: ID!, characterId: ID!): User!
-      }
-
-      type User {
-        id: ID!
-        favoriteCharactersIds: [ID!]!
-      }
-    `,
-    resolvers: {
-      Query: {
-        me(_, __, { userStore }) {
-          return userStore.get('me');
-        },
-      },
-
-      Mutation: {
-        async toggleFavoriteCharacter(_, { userId, characterId }, { userStore }) {
-          if (userId !== 'me') throw new GraphQLError(`unknown userId ${userId}`);
-
-          const me = await userStore.get('me');
-
-          const index = me.favoriteCharactersIds.indexOf(characterId)
-          if (index === -1) {
-            me.favoriteCharactersIds.push(characterId)
-          } else {
-            me.favoriteCharactersIds.splice(index, 1)
-          }
-
-          await userStore.set('me', me);
-
-          return me
-        }
-      },
-    },
-  })
+  const userSubschema = {
+    schema: userSchema,
+    transforms: [
+      new FilterObjectFields((typeName, fieldName) => !(typeName === 'User' && fieldName === 'favoriteCharactersIds')),
+    ],
+  }
 
   return stitchSchemas({
     subschemas: [rickAndMortySubschema, userSubschema],

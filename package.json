@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "esbuild src/sw.js --bundle --format=esm --minify --outfile=dist/sw.js && cp -r public/* dist/",
-    "serve": "serve dist"
+    "serve": "serve dist",
+    "start": "node src/server.js"
   },
   "author": {
     "name": "Nicolas Lepage",

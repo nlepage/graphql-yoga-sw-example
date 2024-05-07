@@ -4,31 +4,31 @@ import { getSchema } from './schema.js'
 import { getIdbUserStore } from './user-store.js';
 
 // Skip installed stage and jump to activating stage
-addEventListener('install', (event) => {
-  event.waitUntil(skipWaiting())
+self.addEventListener('install', (event) => {
+  event.waitUntil(self.skipWaiting())
 })
 
 // Start controlling clients as soon as the SW is activated
-addEventListener('activate', event => {
-  event.waitUntil(clients.claim())
+self.addEventListener('activate', event => {
+  event.waitUntil(self.clients.claim())
 })
 
-const graphqlPath = new URL('./graphql', location).pathname;
+const graphqlUrl = new URL('./graphql', self.registration.scope)
 
-const userStorePromise = getIdbUserStore();
+const userStorePromise = getIdbUserStore()
 
 const yoga = createYoga({
   fetchAPI: fetch,
-  schema: getSchema(),
-  graphiql: graphqlPath,
-  graphqlEndpoint: graphqlPath,
+  graphiql: graphqlUrl.pathname,
+  graphqlEndpoint: graphqlUrl.pathname,
   context: async () => ({
     userStore: await userStorePromise,
   }),
+  schema: getSchema(),
 })
 
-addEventListener('fetch', e => {
-  if (isLocalRequest(e.request)) e.respondWith(handleRequest(e.request))
+self.addEventListener('fetch', e => {
+  if (isGraphqlRequest(e.request)) e.respondWith(handleRequest(e.request))
 })
 
 async function handleRequest(request) {
@@ -42,9 +42,11 @@ async function handleRequest(request) {
   }
 }
 
-function isLocalRequest(request) {
-  if (request.referrer === '') return true
-  const { origin: referrerOrigin } = new URL(request.referrer)
-  const { origin } = new URL(request.url)
-  return origin === referrerOrigin
+function isGraphqlRequest(request) {
+  const requestUrl = new URL(request.url)
+  if (request.referrer !== '') {
+    const { origin: referrerOrigin } = new URL(request.referrer)
+    if (requestUrl.origin !== referrerOrigin) return false
+  }
+  return requestUrl.pathname === graphqlUrl.pathname
 }
